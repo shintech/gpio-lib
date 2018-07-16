@@ -1,8 +1,10 @@
 import fs from 'fs'
 import path from 'path'
+import util from 'util'
 
 var sysPath = '/sys/class/gpio'
 const filePath = path.join(sysPath, 'gpio')
+const readFile = util.promisify(fs.readFile)
 
 export default class GPIO {
   constructor (pins) {
@@ -34,9 +36,13 @@ export default class GPIO {
     fs.writeFile(file, value, (callback || noOp))
   }
 
-  getValue (pinNumber, callback) {
-    const file = path.join(filePath + pinNumber, 'value')
-    fs.readFile(file, 'utf-8', callback)
+  async getValue (pinNumber) {
+    return new Promise(async function (resolve, reject) {
+      const file = path.join(filePath + pinNumber, 'value')
+      const f = await readFile(file, 'utf-8')
+
+      resolve(f.trim())
+    })
   }
 
   getDirection (pinNumber, callback) {
